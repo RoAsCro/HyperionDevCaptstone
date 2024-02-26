@@ -248,8 +248,31 @@ def view_mine():
         write_tasks()
 
 def task_overview():
-    with open("task_overview.txt", "w+", "Ut")
+    '''
+    Generates the taks_overview file based on the current task_list
+    '''
+    completed = 0
+    overdue = 0
+    for t in task_list:
+        if t["completed"]:
+            completed += 1
+        elif t["due_date"] < datetime.today():
+            overdue += 1
+    tasks = len(task_list)
+    if tasks == 0:
+        return
+    incomplete = tasks - completed
+    
+    write_string = ""
+    write_string += f"Total number of tasks: \t\t\t\t {tasks}\n"
+    write_string += f"Completed tasks: \t\t\t\t\t {completed}\n"
+    write_string += f"Incomplete tasks: \t\t\t\t\t {incomplete}\n"
+    write_string += f"Overdue tasks: \t\t\t\t\t\t {overdue}\n"
+    write_string += f"Percentage of incomplete tasks: \t {incomplete / tasks * 100}%\n"
+    write_string += f"Percentage of overdue tasks: \t\t {overdue / tasks * 100}%\n"
 
+    with open("task_overview.txt", "w") as overview:
+        overview.write(write_string)
 
 # Create tasks.txt if it doesn't exist
 if not os.path.exists("tasks.txt"):
@@ -342,7 +365,7 @@ while True:
         case 'vm':
             view_mine()
                 
-        case 'dr':
+        case 'gr':
             task_overview()
 
         case 'ds': 
