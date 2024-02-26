@@ -11,6 +11,24 @@ from datetime import datetime, date
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d"
 
+def write_tasks():
+    '''
+    Writes the current tasks in task_list to tasks.txt
+    '''
+    with open("tasks.txt", "w") as task_file:
+        task_list_to_write = []
+        for t in task_list:
+            str_attrs = [
+                t['username'],
+                t['title'],
+                t['description'],
+                t['due_date'].strftime(DATETIME_STRING_FORMAT),
+                t['assigned_date'].strftime(DATETIME_STRING_FORMAT),
+                "Yes" if t['completed'] else "No"
+            ]
+            task_list_to_write.append(";".join(str_attrs))
+        task_file.write("\n".join(task_list_to_write))
+
 def task_string(t_num: int, task: dict):
     '''
     takes a user task entry and task number and translates it into a readable string.
@@ -104,19 +122,7 @@ def add_task():
     }
 
     task_list.append(new_task)
-    with open("tasks.txt", "w") as task_file:
-        task_list_to_write = []
-        for t in task_list:
-            str_attrs = [
-                t['username'],
-                t['title'],
-                t['description'],
-                t['due_date'].strftime(DATETIME_STRING_FORMAT),
-                t['assigned_date'].strftime(DATETIME_STRING_FORMAT),
-                "Yes" if t['completed'] else "No"
-            ]
-            task_list_to_write.append(";".join(str_attrs))
-        task_file.write("\n".join(task_list_to_write))
+    write_tasks()
     print("Task successfully added.")
     
 
@@ -140,6 +146,8 @@ def view_mine():
         format of Output 2 presented in the task pdf (i.e. includes spacing
         and labelling)
     '''
+    # Check if there's been a change
+    changed = False
     t_num = 0
     current_tasks = []
     refs = {}
@@ -168,10 +176,9 @@ def view_mine():
             print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1. Go back")
             edit_mark = input()
             edit = False
-            changed = False
             match edit_mark:
                 case "-1":
-                    print("\n")
+                    print("\n")        
                     break
                 case "0":
                     edit = True
@@ -238,9 +245,8 @@ def view_mine():
                             except ValueError:
                                 print("Not a valid date.\n")
                                 continue
-                    
-                if changed:
-                    pass
+    if changed:
+        write_tasks()
 
                 
 
