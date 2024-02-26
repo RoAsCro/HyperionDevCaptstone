@@ -53,9 +53,13 @@ def task_string(task: dict, **number):
 
 
 def reg_user():
+    '''
+    Register a new user
+    '''
     while True:
         '''Add a new user to the user.txt file'''
         # - Request input of a new username
+        print("-----------------------------------")
         new_username = input("New Username: ")
 
         # - Request input of a new password
@@ -84,7 +88,7 @@ def reg_user():
 
         # - Otherwise you present a relevant message.
         else:
-            print("Passwords do no match")
+            print("Passwords do no match\\n")
 
 def add_task():
     '''Allow a user to add a new task to task.txt file
@@ -93,6 +97,8 @@ def add_task():
             - A title of a task,
             - A description of the task and 
             - the due date of the task.'''
+    # Check input user exists
+    print("-----------------------------------")
     while True:
         task_username = input("Name of person assigned to task: ")
         if task_username not in username_password.keys():
@@ -101,6 +107,7 @@ def add_task():
             break
     task_title = input("Title of Task: ")
     task_description = input("Description of Task: ")
+    # Check due date of task input correctly
     while True:
         try:
             task_due_date = input("Due date of task (YYYY-MM-DD): ")
@@ -134,7 +141,7 @@ def view_all():
         format of Output 2 presented in the task pdf (i.e. includes spacing
         and labelling) 
     '''
-
+    print("-----------------------------------")
     for t in task_list:
         print(task_string(t))
         
@@ -144,18 +151,19 @@ def view_mine():
         format of Output 2 presented in the task pdf (i.e. includes spacing
         and labelling)
     '''
+    print("-----------------------------------")
     # Check if there's been a change
     changed = False
     t_num = 0
     current_tasks = []
-    refs = {}
-    for t_ref, t in enumerate(task_list):
+    # Print tasks for current user
+    for t in task_list:
         if  t['username'] == curr_user:
             current_tasks.append(t)
-            refs[t_num] = t_ref
             t_num += 1
             disp_str = task_string(t, t_num=t_num)
             print(disp_str)
+    # Check if the user wants to make a change to a task
     while True:
         print("Select a task to edit or mark as complete. Input -1 to exit.")
         selection = input()
@@ -165,11 +173,14 @@ def view_mine():
             print("Please enter a number.")
             continue
         selection = int(selection)
+        # Check the selected task number exists
         if selection <= 0 or selection > len(current_tasks):
             print("Not a valid task number.")
             continue
+
         selected_task = current_tasks[selection - 1]
         print(f"Your selection:\n\n{task_string(selected_task, t_num=selection)}")
+
         while True:
             print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1: Go back")
             edit_mark = input()
@@ -185,11 +196,12 @@ def view_mine():
                 case _:
                     print("Not a valid selection.\n")
                     continue
+            # Mark task as complete
             if not edit:
                 selected_task["completed"] = True
                 changed = True
                 print(f"Task {selection} marked as complete.")
-
+            # Edit task
             else:
                 if selected_task["completed"]:
                     print(f"Task {selection} is already complete and cannot be edited. Please select another task.\n")
@@ -209,6 +221,7 @@ def view_mine():
                         case _:
                             print("Not a valid selection.\n")
                             continue
+                    # Edit who the task is assigned to
                     if name:
                         while True:
                             print("Enter user to assign task to.")
@@ -222,6 +235,7 @@ def view_mine():
                             print(f"Task {selection} assigned to user {new_user}")
                             changed = True
                             break
+                    # Edit the due date
                     else:
                         while True:
                             print("Enter the new due date in the format yyyy-mm-dd.")
@@ -233,6 +247,7 @@ def view_mine():
                             if len(new_date) != 3 or not correct_format:
                                 print("Invalid date format. Please enter the day, month, and year as numbers, separated by dashes (-)).\n")
                                 continue
+                            # Check the date is formatted correctly
                             try:
                                 due_date = datetime(int(new_date[0]), int(new_date[1]), int(new_date[2]))
                                 selected_task["due_date"] = due_date
@@ -243,36 +258,84 @@ def view_mine():
                             except ValueError:
                                 print("Not a valid date.\n")
                                 continue
+    # Save changes
     if changed:
         print("Changes saved.\n")
         write_tasks()
 
 def task_overview():
     '''
-    Generates the taks_overview file based on the current task_list
+    Generates the task_overview and user_overview files based on the current task_list
     '''
     completed = 0
     overdue = 0
+    user_tasks = {}
+    # Generate user dictionary
+    for u in username_password:
+        user_tasks[u] = {"number": 0, "fraction": 0.00,
+                         "complete": 0.00, "incomplete": 0.00,
+                         "overdue": 0.00}
+    # Iterate through tasks
     for t in task_list:
+        user_entry = user_tasks[t["username"]]
+        user_entry["number"] += 1
+
         if t["completed"]:
             completed += 1
+            user_entry["complete"] += 1
+
         elif t["due_date"] < datetime.today():
             overdue += 1
+            user_entry["overdue"] += 1
+
     tasks = len(task_list)
+    # If there are no tasks, exit
     if tasks == 0:
+        print("There are no tasks currently assigned. Reports not generated.\n")
         return
+    
+    # Format the user dictionary
+    for entry in user_tasks.items():
+        u = entry[1]
+        u_complete = u["complete"]
+        u_number = u["number"]
+        u_incomplete = u_number - u_complete
+        number_zero = u_number == 0
+        u["fraction"] = u_number / tasks * 100
+        u["complete"] = u_complete / u_number * 100 if not number_zero else 100
+        u["incomplete"] = u_incomplete / u_number * 100 if not number_zero else 0
+        u["overdue"] = u["overdue"] / u_number * 100 if not number_zero else 0
+
     incomplete = tasks - completed
     
+    # Generate the task report string
     write_string = ""
-    write_string += f"Total number of tasks: \t\t\t\t {tasks}\n"
-    write_string += f"Completed tasks: \t\t\t\t\t {completed}\n"
-    write_string += f"Incomplete tasks: \t\t\t\t\t {incomplete}\n"
-    write_string += f"Overdue tasks: \t\t\t\t\t\t {overdue}\n"
+    write_string += f"Total number of tasks: \t\t\t {tasks}\n"
+    write_string += f"Completed tasks: \t\t\t {completed}\n"
+    write_string += f"Incomplete tasks: \t\t\t {incomplete}\n"
+    write_string += f"Overdue tasks: \t\t\t\t {overdue}\n"
     write_string += f"Percentage of incomplete tasks: \t {incomplete / tasks * 100}%\n"
     write_string += f"Percentage of overdue tasks: \t\t {overdue / tasks * 100}%\n"
 
+    # Write to the report files
     with open("task_overview.txt", "w") as overview:
         overview.write(write_string)
+    with open("user_overview.txt", "w") as overview:
+        to_write = f"Total number of users: \t {len(username_password)}\n"
+        to_write += f"Total number of tasks: \t {tasks}\n\n"
+
+        for u in user_tasks.items():
+            entry = u[1]
+            user_string = ""
+            user_string += f"User: {u[0]}\n"
+            user_string += f"\tTasks: \t\t\t\t {entry["number"]}\n"
+            user_string += f"\tPercentage of all tasks: \t {entry["fraction"]}%\n"
+            user_string += f"\tPercentage tasks complete: \t {entry["complete"]}%\n"
+            user_string += f"\tPercentage tasks incomplete: \t {entry["incomplete"]}%\n"
+            user_string += f"\tPercentage tasks overdue: \t {entry["overdue"]}%\n\n"
+            to_write += user_string
+        overview.write(to_write)
+    print("Reports generated.\n")
 
 # Create tasks.txt if it doesn't exist
 if not os.path.exists("tasks.txt"):
@@ -339,15 +402,14 @@ while True:
     # presenting the menu to the user and 
     # making sure that the user input is converted to lower case.
     print()
-    menu = input('''Select one of the following Options below:
-    r - Registering a user
-    a - Adding a task
-    va - View all tasks
-    vm - View my task
-    gr - Generate reports
-    ds - Display statistics
-    e - Exit
-    ''').lower()
+    menu = input(f'''Select one of the following Options below:
+r - Registering a user
+a - Adding a task
+va - View all tasks
+vm - View my tasks
+gr - Generate reports{"\nds - Display statistics" if curr_user == "admin" else ""}
+e - Exit
+''').lower()
     print()
     match menu:
 
@@ -357,10 +419,8 @@ while True:
         case 'a':
             add_task()
 
-
         case 'va':
             view_all()
-
 
         case 'vm':
             view_mine()
@@ -376,9 +436,19 @@ while True:
                 num_tasks = len(task_list)
 
                 print("-----------------------------------")
-                print(f"Number of users: \t\t {num_users}")
-                print(f"Number of tasks: \t\t {num_tasks}")
-                print("-----------------------------------")    
+                if not os.path.exists("task_overview.txt") or not os.path.exists("user_overview.txt"):
+                    task_overview()
+                print("-----------------------------------")
+                with open("task_overview.txt", "r") as overview:
+                    for line in overview:
+                        print(line)
+                print("-----------------------------------")
+                with open ("user_overview.txt", "r") as overview:
+                    for line in overview:
+                        print(line)
+                print("-----------------------------------")
+            else:
+                print("You have made a wrong choice, Please Try again")
 
         case 'e':
             print('Goodbye!!!')
@@ -386,5 +456,3 @@ while True:
 
         case _:
             print("You have made a wrong choice, Please Try again")
-
-
