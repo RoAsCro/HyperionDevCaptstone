@@ -29,18 +29,21 @@ def write_tasks():
             task_list_to_write.append(";".join(str_attrs))
         task_file.write("\n".join(task_list_to_write))
 
-def task_string(t_num: int, task: dict):
+def task_string(task: dict, **number):
     '''
-    takes a user task entry and task number and translates it into a readable string.
+    takes a user task entry and an optional task number and translates it into a readable string.
 
     Parameters:
-    t_num (int): the task number.
     task (dict): the task entry.
+    **t_num (int): the optional task number. 
 
     Returns:
     A readable string representing the task.
     '''
-    disp_str = f"Task Number: \t {t_num}\n"
+    t_num = number.get("t_num", None)
+    disp_str = ""
+    if t_num != None:
+        disp_str += f"Task Number: \t {t_num}\n"
     disp_str += f"Task: \t\t {task['title']}\n"
     disp_str += f"Assigned to: \t {task['username']}\n"
     disp_str += f"Date Assigned: \t {task['assigned_date'].strftime(DATETIME_STRING_FORMAT)}\n"
@@ -133,12 +136,7 @@ def view_all():
     '''
 
     for t in task_list:
-        disp_str = f"Task: \t\t {t['title']}\n"
-        disp_str += f"Assigned to: \t {t['username']}\n"
-        disp_str += f"Date Assigned: \t {t['assigned_date'].strftime(DATETIME_STRING_FORMAT)}\n"
-        disp_str += f"Due Date: \t {t['due_date'].strftime(DATETIME_STRING_FORMAT)}\n"
-        disp_str += f"Task Description: \n {t['description']}\n"
-        print(disp_str)
+        print(task_string(t))
         
 
 def view_mine():
@@ -156,7 +154,7 @@ def view_mine():
             current_tasks.append(t)
             refs[t_num] = t_ref
             t_num += 1
-            disp_str = task_string(t_num, t)
+            disp_str = task_string(t, t_num=t_num)
             print(disp_str)
     while True:
         print("Select a task to edit or mark as complete. Input -1 to exit.")
@@ -171,7 +169,7 @@ def view_mine():
             print("Not a valid task number.")
             continue
         selected_task = current_tasks[selection - 1]
-        print(f"Your selection:\n\n{task_string(selection, selected_task)}")
+        print(f"Your selection:\n\n{task_string(selected_task, t_num=selection)}")
         while True:
             print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1. Go back")
             edit_mark = input()
@@ -228,11 +226,11 @@ def view_mine():
                         while True:
                             print("Enter the new due date in the format yyyy-mm-dd.")
                             new_date = input().split("-")
-                            format = True
+                            correct_format = True
                             for elem in new_date:
                                 if not elem.isdigit():
-                                    format = False
-                            if len(new_date) != 3 or not format:
+                                    correct_format = False
+                            if len(new_date) != 3 or not correct_format:
                                 print("Invalid date format. Please enter the day, month, and year as numbers, separated by dashes (-)).\n")
                                 continue
                             try:
@@ -319,13 +317,13 @@ while True:
     # making sure that the user input is converted to lower case.
     print()
     menu = input('''Select one of the following Options below:
-            r - Registering a user
-            a - Adding a task
-            va - View all tasks
-            vm - View my task
-            ds - Display statistics
-            e - Exit
-            : ''').lower()
+    r - Registering a user
+    a - Adding a task
+    va - View all tasks
+    vm - View my task
+    ds - Display statistics
+    e - Exit
+    ''').lower()
     
     if menu == 'r':
         reg_user()
