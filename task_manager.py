@@ -42,7 +42,7 @@ def task_string(task: dict, **number):
     '''
     t_num = number.get("t_num", None)
     disp_str = ""
-    if t_num != None:
+    if t_num is not None:
         disp_str += f"Task Number: \t {t_num}\n"
     disp_str += f"Task: \t\t {task['title']}\n"
     disp_str += f"Assigned to: \t {task['username']}\n"
@@ -171,7 +171,7 @@ def view_mine():
         selected_task = current_tasks[selection - 1]
         print(f"Your selection:\n\n{task_string(selected_task, t_num=selection)}")
         while True:
-            print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1. Go back")
+            print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1: Go back")
             edit_mark = input()
             edit = False
             match edit_mark:
@@ -186,7 +186,7 @@ def view_mine():
                     print("Not a valid selection.\n")
                     continue
             if not edit:
-                task_list[refs[selection - 1]]["completed"] = True
+                selected_task["completed"] = True
                 changed = True
                 print(f"Task {selection} marked as complete.")
 
@@ -195,7 +195,7 @@ def view_mine():
                     print(f"Task {selection} is already complete and cannot be edited. Please select another task.\n")
                     break
                 while True:
-                    print("Select one:\n0: Change the user to whom the task is assigned\n1: Change the task's due date\n-1. Go back")
+                    print("Select one:\n0: Change the user to whom the task is assigned\n1: Change the task's due date\n-1: Go back")
                     name_date = input()
                     name = False
                     match name_date:
@@ -218,7 +218,7 @@ def view_mine():
                                 print("No user by that name exists.\n")
                                 continue
 
-                            task_list[refs[selection - 1]]["username"] = new_user
+                            selected_task["username"] = new_user
                             print(f"Task {selection} assigned to user {new_user}")
                             changed = True
                             break
@@ -235,7 +235,7 @@ def view_mine():
                                 continue
                             try:
                                 due_date = datetime(int(new_date[0]), int(new_date[1]), int(new_date[2]))
-                                task_list[refs[selection - 1]]["due_date"] = due_date
+                                selected_task["due_date"] = due_date
                                 changed = True
                                 print(f"Task {selection} now due on {due_date.strftime(DATETIME_STRING_FORMAT)}.\n")
                                 break
@@ -244,11 +244,11 @@ def view_mine():
                                 print("Not a valid date.\n")
                                 continue
     if changed:
+        print("Changes saved.\n")
         write_tasks()
 
-                
-
-
+def task_overview():
+    with open("task_overview.txt", "w+", "Ut")
 
 
 # Create tasks.txt if it doesn't exist
@@ -321,41 +321,47 @@ while True:
     a - Adding a task
     va - View all tasks
     vm - View my task
+    gr - Generate reports
     ds - Display statistics
     e - Exit
     ''').lower()
-    
-    if menu == 'r':
-        reg_user()
+    print()
+    match menu:
 
-    elif menu == 'a':
-        add_task()
+        case 'r':
+            reg_user()
 
-
-    elif menu == 'va':
-        view_all()
+        case 'a':
+            add_task()
 
 
-    elif menu == 'vm':
-        view_mine()
+        case 'va':
+            view_all()
+
+
+        case 'vm':
+            view_mine()
                 
-    
-    elif menu == 'ds' and curr_user == 'admin': 
-        '''If the user is an admin they can display statistics about number of users
-            and tasks.'''
-        num_users = len(username_password.keys())
-        num_tasks = len(task_list)
+        case 'dr':
+            task_overview()
 
-        print("-----------------------------------")
-        print(f"Number of users: \t\t {num_users}")
-        print(f"Number of tasks: \t\t {num_tasks}")
-        print("-----------------------------------")    
+        case 'ds': 
+            '''If the user is an admin they can display statistics about number of users
+                and tasks.'''
+            if (curr_user == 'admin'):
+                num_users = len(username_password.keys())
+                num_tasks = len(task_list)
 
-    elif menu == 'e':
-        print('Goodbye!!!')
-        exit()
+                print("-----------------------------------")
+                print(f"Number of users: \t\t {num_users}")
+                print(f"Number of tasks: \t\t {num_tasks}")
+                print("-----------------------------------")    
 
-    else:
-        print("You have made a wrong choice, Please Try again")
+        case 'e':
+            print('Goodbye!!!')
+            exit()
+
+        case _:
+            print("You have made a wrong choice, Please Try again")
 
 
