@@ -12,31 +12,38 @@ from datetime import datetime, date
 DATETIME_STRING_FORMAT = "%Y-%m-%d"
 
 def reg_user():
-    '''Add a new user to the user.txt file'''
-    # - Request input of a new username
-    new_username = input("New Username: ")
+    while True:
+        '''Add a new user to the user.txt file'''
+        # - Request input of a new username
+        new_username = input("New Username: ")
 
-    # - Request input of a new password
-    new_password = input("New Password: ")
+        # - Request input of a new password
+        new_password = input("New Password: ")
 
-    # - Request input of password confirmation.
-    confirm_password = input("Confirm Password: ")
+        # - Request input of password confirmation.
+        confirm_password = input("Confirm Password: ")
 
-    # - Check if the new password and confirmed password are the same.
-    if new_password == confirm_password:
-        # - If they are the same, add them to the user.txt file,
-        print("New user added")
-        username_password[new_username] = new_password
-        
-        with open("user.txt", "w") as out_file:
-            user_data = []
-            for k in username_password:
-                user_data.append(f"{k};{username_password[k]}")
-            out_file.write("\n".join(user_data))
+        if new_username in username_password:
+                print("A user with that username already exists. Please input another username.")
+                continue
 
-    # - Otherwise you present a relevant message.
-    else:
-        print("Passwords do no match")
+        # - Check if the new password and confirmed password are the same.
+        if new_password == confirm_password:
+            
+            # - If they are the same, add them to the user.txt file,
+            print("New user added")
+            username_password[new_username] = new_password
+            
+            with open("user.txt", "w") as out_file:
+                user_data = []
+                for k in username_password:
+                    user_data.append(f"{k};{username_password[k]}")
+                out_file.write("\n".join(user_data))
+                break
+
+        # - Otherwise you present a relevant message.
+        else:
+            print("Passwords do no match")
 
 def add_task():
     '''Allow a user to add a new task to task.txt file
@@ -113,9 +120,10 @@ def view_mine():
         format of Output 2 presented in the task pdf (i.e. includes spacing
         and labelling)
     '''
-    for t in task_list:
+    for t_num, t in enumerate(task_list):
         if t['username'] == curr_user:
-            disp_str = f"Task: \t\t {t['title']}\n"
+            disp_str = f"Task Number: {t_num + 1}\n"
+            disp_str += f"Task: \t\t {t['title']}\n"
             disp_str += f"Assigned to: \t {t['username']}\n"
             disp_str += f"Date Assigned: \t {t['assigned_date'].strftime(DATETIME_STRING_FORMAT)}\n"
             disp_str += f"Due Date: \t {t['due_date'].strftime(DATETIME_STRING_FORMAT)}\n"
@@ -188,13 +196,13 @@ while True:
     # making sure that the user input is converted to lower case.
     print()
     menu = input('''Select one of the following Options below:
-r - Registering a user
-a - Adding a task
-va - View all tasks
-vm - View my task
-ds - Display statistics
-e - Exit
-: ''').lower()
+            r - Registering a user
+            a - Adding a task
+            va - View all tasks
+            vm - View my task
+            ds - Display statistics
+            e - Exit
+            : ''').lower()
     
     if menu == 'r':
         reg_user()
