@@ -11,6 +11,26 @@ from datetime import datetime, date
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d"
 
+def task_string(t_num: int, task: dict):
+    '''
+    takes a user task entry and task number and translates it into a readable string.
+
+    Parameters:
+    t_num (int): the task number.
+    task (dict): the task entry.
+
+    Returns:
+    A readable string representing the task.
+    '''
+    disp_str = f"Task Number: \t {t_num}\n"
+    disp_str += f"Task: \t\t {task['title']}\n"
+    disp_str += f"Assigned to: \t {task['username']}\n"
+    disp_str += f"Date Assigned: \t {task['assigned_date'].strftime(DATETIME_STRING_FORMAT)}\n"
+    disp_str += f"Due Date: \t {task['due_date'].strftime(DATETIME_STRING_FORMAT)}\n"
+    disp_str += f"Task Description: \n {task['description']}\n"
+    return disp_str
+
+
 def reg_user():
     while True:
         '''Add a new user to the user.txt file'''
@@ -120,15 +140,112 @@ def view_mine():
         format of Output 2 presented in the task pdf (i.e. includes spacing
         and labelling)
     '''
-    for t_num, t in enumerate(task_list):
-        if t['username'] == curr_user:
-            disp_str = f"Task Number: {t_num + 1}\n"
-            disp_str += f"Task: \t\t {t['title']}\n"
-            disp_str += f"Assigned to: \t {t['username']}\n"
-            disp_str += f"Date Assigned: \t {t['assigned_date'].strftime(DATETIME_STRING_FORMAT)}\n"
-            disp_str += f"Due Date: \t {t['due_date'].strftime(DATETIME_STRING_FORMAT)}\n"
-            disp_str += f"Task Description: \n {t['description']}\n"
+    t_num = 0
+    current_tasks = []
+    refs = {}
+    for t_ref, t in enumerate(task_list):
+        if  t['username'] == curr_user:
+            current_tasks.append(t)
+            refs[t_num] = t_ref
+            t_num += 1
+            disp_str = task_string(t_num, t)
             print(disp_str)
+    while True:
+        print("Select a task to edit or mark as complete. Input -1 to exit.")
+        selection = input()
+        if selection == "-1":
+            break
+        if not selection.isdigit():
+            print("Please enter a number.")
+            continue
+        selection = int(selection)
+        if selection <= 0 or selection > len(current_tasks):
+            print("Not a valid task number.")
+            continue
+        selected_task = current_tasks[selection - 1]
+        print(f"Your selection:\n\n{task_string(selection, selected_task)}")
+        while True:
+            print("Select one:\n0: Edit the task\n1: Mark task as complete\n-1. Go back")
+            edit_mark = input()
+            edit = False
+            changed = False
+            match edit_mark:
+                case "-1":
+                    print("\n")
+                    break
+                case "0":
+                    edit = True
+                case "1":
+                    edit = False
+                case _:
+                    print("Not a valid selection.\n")
+                    continue
+            if not edit:
+                task_list[refs[selection - 1]]["completed"] = True
+                changed = True
+                print(f"Task {selection} marked as complete.")
+
+            else:
+                if selected_task["completed"]:
+                    print(f"Task {selection} is already complete and cannot be edited. Please select another task.\n")
+                    break
+                while True:
+                    print("Select one:\n0: Change the user to whom the task is assigned\n1: Change the task's due date\n-1. Go back")
+                    name_date = input()
+                    name = False
+                    match name_date:
+                        case "-1":
+                            print("\n")
+                            break
+                        case "0":
+                            name = True
+                        case "1":
+                            name = False
+                        case _:
+                            print("Not a valid selection.\n")
+                            continue
+                    if name:
+                        while True:
+                            print("Enter user to assign task to.")
+                            new_user = input()
+
+                            if not new_user in username_password:
+                                print("No user by that name exists.\n")
+                                continue
+
+                            task_list[refs[selection - 1]]["username"] = new_user
+                            print(f"Task {selection} assigned to user {new_user}")
+                            changed = True
+                            break
+                    else:
+                        while True:
+                            print("Enter the new due date in the format yyyy-mm-dd.")
+                            new_date = input().split("-")
+                            format = True
+                            for elem in new_date:
+                                if not elem.isdigit():
+                                    format = False
+                            if len(new_date) != 3 or not format:
+                                print("Invalid date format. Please enter the day, month, and year as numbers, separated by dashes (-)).\n")
+                                continue
+                            try:
+                                due_date = datetime(int(new_date[0]), int(new_date[1]), int(new_date[2]))
+                                task_list[refs[selection - 1]]["due_date"] = due_date
+                                changed = True
+                                print(f"Task {selection} now due on {due_date.strftime(DATETIME_STRING_FORMAT)}.\n")
+                                break
+
+                            except ValueError:
+                                print("Not a valid date.\n")
+                                continue
+                    
+                if changed:
+                    pass
+
+                
+
+
+
 
 # Create tasks.txt if it doesn't exist
 if not os.path.exists("tasks.txt"):
